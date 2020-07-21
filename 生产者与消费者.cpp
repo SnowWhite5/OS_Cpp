@@ -8,7 +8,7 @@
 using namespace std;
 
 mutex mtx;
-condition_variable produce, consume;  // Ìõ¼ş±äÁ¿ÊÇÒ»ÖÖÍ¬²½»úÖÆ£¬ÒªºÍmutexÒÔ¼°lockÒ»ÆğÊ¹ÓÃ
+condition_variable produce, consume;  // æ¡ä»¶å˜é‡æ˜¯ä¸€ç§åŒæ­¥æœºåˆ¶ï¼Œè¦å’Œmutexä»¥åŠlockä¸€èµ·ä½¿ç”¨
 
 queue<int> q;     // shared value by producers and consumers, which is the critical section
 int maxSize = 20;
@@ -17,16 +17,15 @@ void consumer()
 {
     while (true)
     {
-        //this_thread::sleep_for(chrono::milliseconds(1000));
-        //sleep(1);//°üº¬ÔÚunistd.hÍ·ÎÄ¼şÖĞ,Sleep°üº¬ÔÚwindows.hÖĞ
+        
         chrono::milliseconds dura(1000);
         this_thread::sleep_for(dura);
         unique_lock<mutex> lck(mtx);
         while(q.size()==0)
         {
-            consume.wait(lck);             //condition_variable.wait()ËøÖÁÂú×ãwhileÌõ¼ş²»Âú×ã
+            consume.wait(lck);             //condition_variable.wait()é”è‡³æ»¡è¶³whileæ¡ä»¶ä¸æ»¡è¶³
         }
-        //consume.wait(lck, [] {return q.size() != 0; });     // wait(block) consumer until q.size() != 0 is true
+        //consume.wait(lck, [] {return q.size() != 0; });     // è·Ÿä¸Šä¸€å¥ç­‰ä»·ï¼Œwait(block) consumer until q.size() != 0 is true
 
         cout << "consumer " << this_thread::get_id() << ": ";
         q.pop();
@@ -69,7 +68,7 @@ int main()
     for (int i = 0; i < 2; ++i)
     {
         consumers[i] = thread(consumer);
-        producers[i] = thread(producer, i + 1);  //thread£ºµÚÒ»¸ö²ÎÊıÊÇtaskÈÎÎñ£¬µÚ¶ş¸ö²ÎÊıÊÇtaskº¯ÊıµÄ²ÎÊı
+        producers[i] = thread(producer, i + 1);  //threadï¼šç¬¬ä¸€ä¸ªå‚æ•°æ˜¯taskä»»åŠ¡ï¼Œç¬¬äºŒä¸ªå‚æ•°æ˜¯taskå‡½æ•°çš„å‚æ•°
     }
 
     // join them back: (in this program, never join...)
