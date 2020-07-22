@@ -1,4 +1,32 @@
 //转自https://blog.csdn.net/hhypractise/article/details/107150434
+//写者优先
+//reader:
+//p(mutex);    异步信号量1，保证多读者时写者优先
+//p(book);     同步信号量1，保证读写申请的顺序
+//p(rc_mutex); 异步信号量2，保证写计数变量的互斥访问
+//if(readcnt==0) p(wrt); 同步信号量3，保证读写的顺序
+//readcnt++;
+//v(rc_mutex); 异步信号量2
+//v(book);  同步信号量2
+//v(mutex);  异步信号量1
+//读....
+//p(rc_mutex);异步信号量3
+//readcnt--;
+//if(readcnt==0) v(wrt); 同步信号量4
+//v(rc_mutex);异步信号量3
+
+//writer:
+//p(wc_mutex);异步信号量4
+//if(writecnt==0) p(book);同步信号量2
+//writecnt++;
+//v(wc_mutex);异步信号量4
+//p(wrt);同步信号量4
+//写....
+//v(wrt);同步信号量3
+//p(wc_mutex);异步信号量5
+//writecnt--;
+//if(writecnt==0) v(book);同步信号量1
+//v(wc_mutex);异步信号量5
 
 #include<iostream>
 #include<string>
