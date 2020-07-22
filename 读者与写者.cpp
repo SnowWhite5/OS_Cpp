@@ -1,3 +1,5 @@
+//è½¬è‡ªhttps://blog.csdn.net/hhypractise/article/details/107150434
+
 #include<iostream>
 #include<string>
 #include <conio.h>
@@ -7,107 +9,107 @@
 #include <io.h>
 #include <string.h>
 #include<algorithm>
-#include<Windows.h> //¶àÏß³Ì±à³Ì
+#include<Windows.h> //å¤šçº¿ç¨‹ç¼–ç¨‹
 #include<process.h>
 using namespace std;
 
-#define READER 'R'                   //¶ÁÕß
-#define WRITER 'W'                   //Ğ´Õß
-#define INTE_PER_SEC 1000            //Ã¿ÃëÊ±ÖÓÖĞ¶ÏµÄÊıÄ¿
-#define MAX_THREAD_NUM 64            //×î´óÏß³ÌÊıÄ¿
+#define READER 'R'                   //è¯»è€…
+#define WRITER 'W'                   //å†™è€…
+#define INTE_PER_SEC 1000            //æ¯ç§’æ—¶é’Ÿä¸­æ–­çš„æ•°ç›®
+#define MAX_THREAD_NUM 64            //æœ€å¤§çº¿ç¨‹æ•°ç›®
 
-//±äÁ¿ÉùÃ÷³õÊ¼»¯
-int readercount = 0;//¼ÇÂ¼µÈ´ıµÄ¶ÁÕßÊıÄ¿
-int writercount = 0;//¼ÇÂ¼µÈ´ıµÄĞ´ÕßÊıÄ¿
+//å˜é‡å£°æ˜åˆå§‹åŒ–
+int readercount = 0;//è®°å½•ç­‰å¾…çš„è¯»è€…æ•°ç›®
+int writercount = 0;//è®°å½•ç­‰å¾…çš„å†™è€…æ•°ç›®
 
-HANDLE rc_mutex;//ÒòÎª¶ÁÕßÊıÁ¿¶øÌí¼ÓµÄ»¥³âĞÅºÅÁ¿£¬ÓÃÓÚ¶ÁÕßÓÅÏÈ
+HANDLE rc_mutex;//å› ä¸ºè¯»è€…æ•°é‡è€Œæ·»åŠ çš„äº’æ–¥ä¿¡å·é‡ï¼Œç”¨äºè¯»è€…ä¼˜å…ˆ
 
-HANDLE rc2_mutex;//ÒòÎª¶ÁÕßÊıÁ¿¶øÌí¼ÓµÄ»¥³âĞÅºÅÁ¿£¬ÓÃÓÚĞ´ÕßÓÅÏÈ
-HANDLE wc_mutex;//ÒòÎªĞ´ÕßÊıÁ¿¶øÌí¼ÓµÄ»¥³âĞÅºÅÁ¿
-HANDLE book;//»¥³â·ÃÎÊĞÅºÅÁ¿
-HANDLE wrt;//±£Ö¤Ã¿´ÎÖ»ÓĞÒ»¸öĞ´Õß½øĞĞĞ´²Ù×÷£¬µ±Ğ´ÕßµÄÊıÁ¿writercountµÈÓÚ0µÄÊ±ºò£¬ÔòÖ¤Ã÷´ËÊ±Ã»ÓĞÃ»ÓĞ¶ÁÕßÁË,ÊÍ·ÅĞÅºÅÁ¿book
-HANDLE mutex;//±ÜÃâĞ´ÕßÍ¬Ê±Óë¶à¸ö¶ÁÕß½øĞĞ¾ºÕù£¬¶ÁÕßÖĞĞÅºÅÁ¿RWMutex±Èmutex3ÏÈÊÍ·Å£¬ÔòÒ»µ©ÓĞĞ´Õß£¬Ğ´Õß¿ÉÂíÉÏ»ñµÃ×ÊÔ´
+HANDLE rc2_mutex;//å› ä¸ºè¯»è€…æ•°é‡è€Œæ·»åŠ çš„äº’æ–¥ä¿¡å·é‡ï¼Œç”¨äºå†™è€…ä¼˜å…ˆ
+HANDLE wc_mutex;//å› ä¸ºå†™è€…æ•°é‡è€Œæ·»åŠ çš„äº’æ–¥ä¿¡å·é‡
+HANDLE book;//äº’æ–¥è®¿é—®ä¿¡å·é‡
+HANDLE wrt;//ä¿è¯æ¯æ¬¡åªæœ‰ä¸€ä¸ªå†™è€…è¿›è¡Œå†™æ“ä½œï¼Œå½“å†™è€…çš„æ•°é‡writercountç­‰äº0çš„æ—¶å€™ï¼Œåˆ™è¯æ˜æ­¤æ—¶æ²¡æœ‰æ²¡æœ‰è¯»è€…äº†,é‡Šæ”¾ä¿¡å·é‡book
+HANDLE mutex;//é¿å…å†™è€…åŒæ—¶ä¸å¤šä¸ªè¯»è€…è¿›è¡Œç«äº‰ï¼Œè¯»è€…ä¸­ä¿¡å·é‡RWMutexæ¯”mutex3å…ˆé‡Šæ”¾ï¼Œåˆ™ä¸€æ—¦æœ‰å†™è€…ï¼Œå†™è€…å¯é©¬ä¸Šè·å¾—èµ„æº
 
 struct thread_info {
-	int id;		      //Ïß³ÌĞòºÅ
-	char entity;      //Ïß³ÌÀà±ğ(ÅĞ¶ÏÊÇ¶ÁÕßÏß³Ì»¹ÊÇĞ´ÕßÏß³Ì)
-	double delay;		 //Ïß³ÌÑÓ³ÙÊ±¼ä
-	double lastTime;	 //Ïß³Ì¶ÁĞ´²Ù×÷Ê±¼ä
+	int id;		      //çº¿ç¨‹åºå·
+	char entity;      //çº¿ç¨‹ç±»åˆ«(åˆ¤æ–­æ˜¯è¯»è€…çº¿ç¨‹è¿˜æ˜¯å†™è€…çº¿ç¨‹)
+	double delay;		 //çº¿ç¨‹å»¶è¿Ÿæ—¶é—´
+	double lastTime;	 //çº¿ç¨‹è¯»å†™æ“ä½œæ—¶é—´
 };
 /*****************/
-//¶ÁÕßÓÅÏÈ
-//½ø³Ì¹ÜÀí-¶ÁÕßÏß³Ì
+//è¯»è€…ä¼˜å…ˆ
+//è¿›ç¨‹ç®¡ç†-è¯»è€…çº¿ç¨‹
 void rp_threadReader(void *p)
 {
-	DWORD m_delay;                   //ÑÓ³ÙÊ±¼ä
-	DWORD m_persist;                 //¶ÁÎÄ¼ş³ÖĞøÊ±¼ä
-	int m_serial;                    //Ïß³ÌĞòºÅ
-									 //´Ó²ÎÊıÖĞ»ñµÃĞÅÏ¢
+	DWORD m_delay;                   //å»¶è¿Ÿæ—¶é—´
+	DWORD m_persist;                 //è¯»æ–‡ä»¶æŒç»­æ—¶é—´
+	int m_serial;                    //çº¿ç¨‹åºå·
+									 //ä»å‚æ•°ä¸­è·å¾—ä¿¡æ¯
 	m_serial = ((thread_info*)(p))->id;
 	m_delay = (DWORD)(((thread_info*)(p))->delay *INTE_PER_SEC);
 	m_persist = (DWORD)(((thread_info*)(p))->lastTime *INTE_PER_SEC);
-	Sleep(m_delay);                  //ÑÓ³ÙµÈ´ı
+	Sleep(m_delay);                  //å»¶è¿Ÿç­‰å¾…
 
-	printf("¶ÁÕß½ø³Ì%dÉêÇë¶ÁÎÄ¼ş.\n", m_serial);
-	//cout << "¶ÁÕß½ø³Ì"<< m_serial<<"ÉêÇë¶ÁÎÄ¼ş." << endl;
+	printf("è¯»è€…è¿›ç¨‹%dç”³è¯·è¯»æ–‡ä»¶.\n", m_serial);
+	//cout << "è¯»è€…è¿›ç¨‹"<< m_serial<<"ç”³è¯·è¯»æ–‡ä»¶." << endl;
 
-	WaitForSingleObject(rc_mutex, -1);//¶Ôreadercount»¥³â·ÃÎÊ
-	if (readercount == 0)WaitForSingleObject(book, -1);//µÚÒ»Î»¶ÁÕßÉêÇëÊé
+	WaitForSingleObject(rc_mutex, -1);//å¯¹readercountäº’æ–¥è®¿é—®
+	if (readercount == 0)WaitForSingleObject(book, -1);//ç¬¬ä¸€ä½è¯»è€…ç”³è¯·ä¹¦
 	readercount++;
-	ReleaseSemaphore(rc_mutex, 1, NULL);//ÊÍ·Å»¥³âĞÅºÅÁ¿rc_mutex
+	ReleaseSemaphore(rc_mutex, 1, NULL);//é‡Šæ”¾äº’æ–¥ä¿¡å·é‡rc_mutex
 
-	printf("¶ÁÕß½ø³Ì%d¿ªÊ¼¶ÁÎÄ¼ş.\n", m_serial);
+	printf("è¯»è€…è¿›ç¨‹%då¼€å§‹è¯»æ–‡ä»¶.\n", m_serial);
 	Sleep(m_persist);
-	printf("¶ÁÕß½ø³Ì%dÍê³É¶ÁÎÄ¼ş.\n", m_serial);
+	printf("è¯»è€…è¿›ç¨‹%då®Œæˆè¯»æ–‡ä»¶.\n", m_serial);
 
-	WaitForSingleObject(rc_mutex, -1);//ĞŞ¸Äreadercount
-	readercount--;//¶ÁÕß¶ÁÍê
-	if (readercount == 0)ReleaseSemaphore(book, 1, NULL);//ÊÍ·ÅÊé¼®£¬Ğ´Õß¿ÉĞ´
-	ReleaseSemaphore(rc_mutex, 1, NULL);//ÊÍ·Å»¥³âĞÅºÅÁ¿rc_mutex
+	WaitForSingleObject(rc_mutex, -1);//ä¿®æ”¹readercount
+	readercount--;//è¯»è€…è¯»å®Œ
+	if (readercount == 0)ReleaseSemaphore(book, 1, NULL);//é‡Šæ”¾ä¹¦ç±ï¼Œå†™è€…å¯å†™
+	ReleaseSemaphore(rc_mutex, 1, NULL);//é‡Šæ”¾äº’æ–¥ä¿¡å·é‡rc_mutex
 }
 /*****************/
-//¶ÁÕßÓÅÏÈ
-//½ø³Ì¹ÜÀí-Ğ´ÕßÏß³Ì
+//è¯»è€…ä¼˜å…ˆ
+//è¿›ç¨‹ç®¡ç†-å†™è€…çº¿ç¨‹
 void rp_threadWriter(void *p)
 {
-	DWORD m_delay;                   //ÑÓ³ÙÊ±¼ä
-	DWORD m_persist;                 //¶ÁÎÄ¼ş³ÖĞøÊ±¼ä
-	int m_serial;                    //Ïß³ÌĞòºÅ
-									 //´Ó²ÎÊıÖĞ»ñµÃĞÅÏ¢
+	DWORD m_delay;                   //å»¶è¿Ÿæ—¶é—´
+	DWORD m_persist;                 //è¯»æ–‡ä»¶æŒç»­æ—¶é—´
+	int m_serial;                    //çº¿ç¨‹åºå·
+									 //ä»å‚æ•°ä¸­è·å¾—ä¿¡æ¯
 	m_serial = ((thread_info*)(p))->id;
 	m_delay = (DWORD)(((thread_info*)(p))->delay *INTE_PER_SEC);
 	m_persist = (DWORD)(((thread_info*)(p))->lastTime *INTE_PER_SEC);
-	Sleep(m_delay);                  //ÑÓ³ÙµÈ´ı
-	printf("Ğ´Õß½ø³Ì%dÉêÇëĞ´ÎÄ¼ş.\n", m_serial);
-	WaitForSingleObject(book, INFINITE);//ÉêÇë×ÊÔ´
+	Sleep(m_delay);                  //å»¶è¿Ÿç­‰å¾…
+	printf("å†™è€…è¿›ç¨‹%dç”³è¯·å†™æ–‡ä»¶.\n", m_serial);
+	WaitForSingleObject(book, INFINITE);//ç”³è¯·èµ„æº
 	/*write is performed*/
-	printf("Ğ´Õß½ø³Ì%d¿ªÊ¼¶ÁÎÄ¼ş.\n", m_serial);
+	printf("å†™è€…è¿›ç¨‹%då¼€å§‹è¯»æ–‡ä»¶.\n", m_serial);
 	Sleep(m_persist);
-	printf("Ğ´Õß½ø³Ì%dÍê³É¶ÁÎÄ¼ş.\n", m_serial);
-	ReleaseSemaphore(book, 1, NULL);//ÊÍ·Å×ÊÔ´
+	printf("å†™è€…è¿›ç¨‹%då®Œæˆè¯»æ–‡ä»¶.\n", m_serial);
+	ReleaseSemaphore(book, 1, NULL);//é‡Šæ”¾èµ„æº
 }
-//¶ÁÕßÓÅÏÈ
+//è¯»è€…ä¼˜å…ˆ
 void ReaderPriority(char *file)
 {
-	DWORD n_thread = 0;           //Ïß³ÌÊıÄ¿
-	DWORD thread_ID;            //Ïß³ÌID
-	DWORD wait_for_all;         //µÈ´ıËùÓĞÏß³Ì½áÊø
+	DWORD n_thread = 0;           //çº¿ç¨‹æ•°ç›®
+	DWORD thread_ID;            //çº¿ç¨‹ID
+	DWORD wait_for_all;         //ç­‰å¾…æ‰€æœ‰çº¿ç¨‹ç»“æŸ
 
-								//´´½¨ĞÅºÅÁ¿
-	rc_mutex = CreateSemaphore(NULL, 1, 1, "mutex_for_readcount");//¶ÁÕß¶ÔcountĞŞ¸Ä»¥³âĞÅºÅÁ¿£¬³õÖµÎª1,×î´óÎª1
-	book = CreateSemaphore(NULL, 1, 1, NULL);//Êé¼®»¥³â·ÃÎÊĞÅºÅÁ¿£¬³õÖµÎª1,×î´óÖµÎª1
+								//åˆ›å»ºä¿¡å·é‡
+	rc_mutex = CreateSemaphore(NULL, 1, 1, "mutex_for_readcount");//è¯»è€…å¯¹countä¿®æ”¹äº’æ–¥ä¿¡å·é‡ï¼Œåˆå€¼ä¸º1,æœ€å¤§ä¸º1
+	book = CreateSemaphore(NULL, 1, 1, NULL);//ä¹¦ç±äº’æ–¥è®¿é—®ä¿¡å·é‡ï¼Œåˆå€¼ä¸º1,æœ€å¤§å€¼ä¸º1
 
-	HANDLE h_Thread[MAX_THREAD_NUM];//Ïß³Ì¾ä±ú,Ïß³Ì¶ÔÏóµÄÊı×é
+	HANDLE h_Thread[MAX_THREAD_NUM];//çº¿ç¨‹å¥æŸ„,çº¿ç¨‹å¯¹è±¡çš„æ•°ç»„
 	thread_info thread_info[MAX_THREAD_NUM];
 
 	int id = 0;
-	readercount = 0;               //³õÊ¼»¯readcount
+	readercount = 0;               //åˆå§‹åŒ–readcount
 	ifstream inFile;
 	inFile.open(file);
-	cout << "¶ÁÕßÓÅÏÈ:" << endl;
+	cout << "è¯»è€…ä¼˜å…ˆ:" << endl;
 	while (inFile)
 	{
-		//¶ÁÈëÃ¿Ò»¸ö¶ÁÕß,Ğ´ÕßµÄĞÅÏ¢
+		//è¯»å…¥æ¯ä¸€ä¸ªè¯»è€…,å†™è€…çš„ä¿¡æ¯
 		inFile >> thread_info[n_thread].id;
 		inFile >> thread_info[n_thread].entity;
 		inFile >> thread_info[n_thread].delay;
@@ -118,114 +120,114 @@ void ReaderPriority(char *file)
 	{
 		if (thread_info[i].entity == READER || thread_info[i].entity == 'r')
 		{
-			//´´½¨¶ÁÕß½ø³Ì
+			//åˆ›å»ºè¯»è€…è¿›ç¨‹
 			h_Thread[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)(rp_threadReader), &thread_info[i], 0, &thread_ID);
 		}
 		else
 		{
-			//´´½¨Ğ´Ïß³Ì
+			//åˆ›å»ºå†™çº¿ç¨‹
 			h_Thread[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)(rp_threadWriter), &thread_info[i], 0, &thread_ID);
 		}
 	}
-	//µÈ´ı×ÓÏß³Ì½áÊø
+	//ç­‰å¾…å­çº¿ç¨‹ç»“æŸ
 
-	//¹Ø±Õ¾ä±ú
+	//å…³é—­å¥æŸ„
 	wait_for_all = WaitForMultipleObjects(n_thread, h_Thread, TRUE, -1);
 	cout << endl;
-	cout << "ËùÓĞ¶ÁÕßĞ´ÕßÒÑ¾­Íê³É²Ù×÷£¡£¡" << endl;
+	cout << "æ‰€æœ‰è¯»è€…å†™è€…å·²ç»å®Œæˆæ“ä½œï¼ï¼" << endl;
 	for(int i = 0; i<(int)(n_thread); i++)
 		CloseHandle(h_Thread[i]);
 	CloseHandle(rc_mutex);
 	CloseHandle(book);
 }
 /*****************/
-//Ğ´ÕßÓÅÏÈ
-//½ø³Ì¹ÜÀí-¶ÁÕßÏß³Ì
+//å†™è€…ä¼˜å…ˆ
+//è¿›ç¨‹ç®¡ç†-è¯»è€…çº¿ç¨‹
 void wp_threadReader(void *p) {
-	DWORD m_delay;                   //ÑÓ³ÙÊ±¼ä
-	DWORD m_persist;                 //¶ÁÎÄ¼ş³ÖĞøÊ±¼ä
-	int m_serial;                    //Ïß³ÌĞòºÅ
-									 //´Ó²ÎÊıÖĞ»ñµÃĞÅÏ¢
+	DWORD m_delay;                   //å»¶è¿Ÿæ—¶é—´
+	DWORD m_persist;                 //è¯»æ–‡ä»¶æŒç»­æ—¶é—´
+	int m_serial;                    //çº¿ç¨‹åºå·
+									 //ä»å‚æ•°ä¸­è·å¾—ä¿¡æ¯
 	m_serial = ((thread_info*)(p))->id;
 	m_delay = (DWORD)(((thread_info*)(p))->delay *INTE_PER_SEC);
 	m_persist = (DWORD)(((thread_info*)(p))->lastTime *INTE_PER_SEC);
-	Sleep(m_delay);                  //ÑÓ³ÙµÈ´ı
+	Sleep(m_delay);                  //å»¶è¿Ÿç­‰å¾…
 
-	printf("¶ÁÕß½ø³Ì%dÉêÇë¶ÁÎÄ¼ş.\n", m_serial);
+	printf("è¯»è€…è¿›ç¨‹%dç”³è¯·è¯»æ–‡ä»¶.\n", m_serial);
 	WaitForSingleObject(mutex, -1);
 	WaitForSingleObject(book, -1);
-	WaitForSingleObject(rc2_mutex, -1);//¶Ôreadercount»¥³â·ÃÎÊ
-	if (readercount == 0)WaitForSingleObject(wrt, -1);//µÚÒ»Î»¶ÁÕßÉêÇëÊé,Í¬Ê±·ÀÖ¹Ğ´Õß½øĞĞĞ´²Ù×÷
+	WaitForSingleObject(rc2_mutex, -1);//å¯¹readercountäº’æ–¥è®¿é—®
+	if (readercount == 0)WaitForSingleObject(wrt, -1);//ç¬¬ä¸€ä½è¯»è€…ç”³è¯·ä¹¦,åŒæ—¶é˜²æ­¢å†™è€…è¿›è¡Œå†™æ“ä½œ
 	readercount++;
 
-	ReleaseSemaphore(rc2_mutex, 1, NULL);//ÊÍ·Å»¥³âĞÅºÅÁ¿rc_mutex
-	ReleaseSemaphore(book, 1, NULL);//ÊÍ·Å»¥³âĞÅºÅÁ¿book
-	ReleaseSemaphore(mutex, 1, NULL);//ÊÍ·Å»¥³âĞÅºÅÁ¿mutex
+	ReleaseSemaphore(rc2_mutex, 1, NULL);//é‡Šæ”¾äº’æ–¥ä¿¡å·é‡rc_mutex
+	ReleaseSemaphore(book, 1, NULL);//é‡Šæ”¾äº’æ–¥ä¿¡å·é‡book
+	ReleaseSemaphore(mutex, 1, NULL);//é‡Šæ”¾äº’æ–¥ä¿¡å·é‡mutex
 									 /* reading is performed */
-	printf("¶ÁÕß½ø³Ì%d¿ªÊ¼¶ÁÎÄ¼ş.\n", m_serial);
+	printf("è¯»è€…è¿›ç¨‹%då¼€å§‹è¯»æ–‡ä»¶.\n", m_serial);
 	Sleep(m_persist);
-	printf("¶ÁÕß½ø³Ì%dÍê³É¶ÁÎÄ¼ş.\n", m_serial);
-	WaitForSingleObject(rc2_mutex, -1);//ĞŞ¸Äreadercount
-	readercount--;//¶ÁÕß¶ÁÍê
-	if (readercount == 0)ReleaseSemaphore(wrt, 1, NULL);//ÊÍ·Å×ÊÔ´£¬Ğ´Õß¿ÉĞ´
-	ReleaseSemaphore(rc2_mutex, 1, NULL);//ÊÍ·Å»¥³âĞÅºÅÁ¿rc_mutex
+	printf("è¯»è€…è¿›ç¨‹%då®Œæˆè¯»æ–‡ä»¶.\n", m_serial);
+	WaitForSingleObject(rc2_mutex, -1);//ä¿®æ”¹readercount
+	readercount--;//è¯»è€…è¯»å®Œ
+	if (readercount == 0)ReleaseSemaphore(wrt, 1, NULL);//é‡Šæ”¾èµ„æºï¼Œå†™è€…å¯å†™
+	ReleaseSemaphore(rc2_mutex, 1, NULL);//é‡Šæ”¾äº’æ–¥ä¿¡å·é‡rc_mutex
 }
 /*****************/
-//Ğ´ÕßÓÅÏÈ
-//½ø³Ì¹ÜÀí-Ğ´ÕßÏß³Ì
+//å†™è€…ä¼˜å…ˆ
+//è¿›ç¨‹ç®¡ç†-å†™è€…çº¿ç¨‹
 void wp_threadWriter(void *p) {
-	DWORD m_delay;                   //ÑÓ³ÙÊ±¼ä
-	DWORD m_persist;                 //¶ÁÎÄ¼ş³ÖĞøÊ±¼ä
-	int m_serial;                    //Ïß³ÌĞòºÅ
-									 //´Ó²ÎÊıÖĞ»ñµÃĞÅÏ¢
+	DWORD m_delay;                   //å»¶è¿Ÿæ—¶é—´
+	DWORD m_persist;                 //è¯»æ–‡ä»¶æŒç»­æ—¶é—´
+	int m_serial;                    //çº¿ç¨‹åºå·
+									 //ä»å‚æ•°ä¸­è·å¾—ä¿¡æ¯
 	m_serial = ((thread_info*)(p))->id;
 	m_delay = (DWORD)(((thread_info*)(p))->delay *INTE_PER_SEC);
 	m_persist = (DWORD)(((thread_info*)(p))->lastTime *INTE_PER_SEC);
-	Sleep(m_delay);                  //ÑÓ³ÙµÈ´ı
+	Sleep(m_delay);                  //å»¶è¿Ÿç­‰å¾…
 
-	printf("Ğ´Õß½ø³Ì%dÉêÇëĞ´ÎÄ¼ş.\n", m_serial);
-	WaitForSingleObject(wc_mutex, -1);//¶Ôwritercount»¥³â·ÃÎÊ
-	if (writercount == 0)WaitForSingleObject(book, -1);//µÚÒ»Î»Ğ´ÕßÉêÇë×ÊÔ´
+	printf("å†™è€…è¿›ç¨‹%dç”³è¯·å†™æ–‡ä»¶.\n", m_serial);
+	WaitForSingleObject(wc_mutex, -1);//å¯¹writercountäº’æ–¥è®¿é—®
+	if (writercount == 0)WaitForSingleObject(book, -1);//ç¬¬ä¸€ä½å†™è€…ç”³è¯·èµ„æº
 	writercount++;
-	ReleaseSemaphore(wc_mutex, 1, NULL);//ÊÍ·Å×ÊÔ´
+	ReleaseSemaphore(wc_mutex, 1, NULL);//é‡Šæ”¾èµ„æº
 
 	WaitForSingleObject(wrt, -1);
 	/*write is performed*/
-	printf("Ğ´Õß½ø³Ì%d¿ªÊ¼Ğ´ÎÄ¼ş.\n", m_serial);
+	printf("å†™è€…è¿›ç¨‹%då¼€å§‹å†™æ–‡ä»¶.\n", m_serial);
 	Sleep(m_persist);
-	printf("Ğ´Õß½ø³Ì%dÍê³ÉĞ´ÎÄ¼ş.\n", m_serial);
-	ReleaseSemaphore(wrt, 1, NULL);//ÊÍ·Å×ÊÔ´
+	printf("å†™è€…è¿›ç¨‹%då®Œæˆå†™æ–‡ä»¶.\n", m_serial);
+	ReleaseSemaphore(wrt, 1, NULL);//é‡Šæ”¾èµ„æº
 
-	WaitForSingleObject(wc_mutex, -1);//¶Ôwritercount»¥³â·ÃÎÊ
+	WaitForSingleObject(wc_mutex, -1);//å¯¹writercountäº’æ–¥è®¿é—®
 	writercount--;
-	if (writercount == 0)ReleaseSemaphore(book, 1, NULL);//ÊÍ·Å×ÊÔ´
-	ReleaseSemaphore(wc_mutex, 1, NULL);//ÊÍ·Å×ÊÔ´
+	if (writercount == 0)ReleaseSemaphore(book, 1, NULL);//é‡Šæ”¾èµ„æº
+	ReleaseSemaphore(wc_mutex, 1, NULL);//é‡Šæ”¾èµ„æº
 }
-//Ğ´ÕßÓÅÏÈ
+//å†™è€…ä¼˜å…ˆ
 void WriterPriority(char *file) {
-	DWORD n_thread = 0;           //Ïß³ÌÊıÄ¿
-	DWORD thread_ID;            //Ïß³ÌID
-	DWORD wait_for_all;         //µÈ´ıËùÓĞÏß³Ì½áÊø
+	DWORD n_thread = 0;           //çº¿ç¨‹æ•°ç›®
+	DWORD thread_ID;            //çº¿ç¨‹ID
+	DWORD wait_for_all;         //ç­‰å¾…æ‰€æœ‰çº¿ç¨‹ç»“æŸ
 
-								//´´½¨ĞÅºÅÁ¿
-	rc2_mutex = CreateSemaphore(NULL, 1, 1, "mutex_for_readercount");//¶ÁÕß¶ÔcountĞŞ¸Ä»¥³âĞÅºÅÁ¿£¬³õÖµÎª1,×î´óÎª1
-	wc_mutex = CreateSemaphore(NULL, 1, 1, "mutex_for_writercount");//Ğ´Õß¶ÔcountĞŞ¸Ä»¥³âĞÅºÅÁ¿£¬³õÖµÎª1,×î´óÎª1
+								//åˆ›å»ºä¿¡å·é‡
+	rc2_mutex = CreateSemaphore(NULL, 1, 1, "mutex_for_readercount");//è¯»è€…å¯¹countä¿®æ”¹äº’æ–¥ä¿¡å·é‡ï¼Œåˆå€¼ä¸º1,æœ€å¤§ä¸º1
+	wc_mutex = CreateSemaphore(NULL, 1, 1, "mutex_for_writercount");//å†™è€…å¯¹countä¿®æ”¹äº’æ–¥ä¿¡å·é‡ï¼Œåˆå€¼ä¸º1,æœ€å¤§ä¸º1
 	wrt = CreateSemaphore(NULL, 1, 1, NULL);//
 	mutex = CreateSemaphore(NULL, 1, 1, NULL);//
-	book = CreateSemaphore(NULL, 1, 1, NULL);//Êé¼®»¥³â·ÃÎÊĞÅºÅÁ¿£¬³õÖµÎª1,×î´óÖµÎª1
+	book = CreateSemaphore(NULL, 1, 1, NULL);//ä¹¦ç±äº’æ–¥è®¿é—®ä¿¡å·é‡ï¼Œåˆå€¼ä¸º1,æœ€å¤§å€¼ä¸º1
 
-	HANDLE h_Thread[MAX_THREAD_NUM];//Ïß³Ì¾ä±ú,Ïß³Ì¶ÔÏóµÄÊı×é
+	HANDLE h_Thread[MAX_THREAD_NUM];//çº¿ç¨‹å¥æŸ„,çº¿ç¨‹å¯¹è±¡çš„æ•°ç»„
 	thread_info thread_info[MAX_THREAD_NUM];
 
 	int id = 0;
-	readercount = 0;               //³õÊ¼»¯readcount
+	readercount = 0;               //åˆå§‹åŒ–readcount
 	writercount = 0;
 	ifstream inFile;
 	inFile.open(file);
-	cout << "Ğ´ÕßÓÅÏÈ:" << endl;
+	cout << "å†™è€…ä¼˜å…ˆ:" << endl;
 	while (inFile)
 	{
-		//¶ÁÈëÃ¿Ò»¸ö¶ÁÕß,Ğ´ÕßµÄĞÅÏ¢
+		//è¯»å…¥æ¯ä¸€ä¸ªè¯»è€…,å†™è€…çš„ä¿¡æ¯
 		inFile >> thread_info[n_thread].id;
 		inFile >> thread_info[n_thread].entity;
 		inFile >> thread_info[n_thread].delay;
@@ -236,58 +238,58 @@ void WriterPriority(char *file) {
 	{
 		if (thread_info[i].entity == READER || thread_info[i].entity == 'r')
 		{
-			//´´½¨¶ÁÕß½ø³Ì
+			//åˆ›å»ºè¯»è€…è¿›ç¨‹
 			h_Thread[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)(wp_threadReader), &thread_info[i], 0, &thread_ID);
 		}
 		else
 		{
-			//´´½¨Ğ´Ïß³Ì
+			//åˆ›å»ºå†™çº¿ç¨‹
 			h_Thread[i] = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)(wp_threadWriter), &thread_info[i], 0, &thread_ID);
 		}
 	}
-	//µÈ´ı×ÓÏß³Ì½áÊø
+	//ç­‰å¾…å­çº¿ç¨‹ç»“æŸ
 
-	//¹Ø±Õ¾ä±ú
+	//å…³é—­å¥æŸ„
 	wait_for_all = WaitForMultipleObjects(n_thread, h_Thread, TRUE, -1);
 	cout << endl;
-	cout << "ËùÓĞ¶ÁÕßĞ´ÕßÒÑ¾­Íê³É²Ù×÷£¡£¡" << endl;
+	cout << "æ‰€æœ‰è¯»è€…å†™è€…å·²ç»å®Œæˆæ“ä½œï¼ï¼" << endl;
 	for (int i = 0; i<(int)(n_thread); i++)
 		CloseHandle(h_Thread[i]);
 	CloseHandle(wc_mutex);
 	CloseHandle(rc2_mutex);
 	CloseHandle(book);
 }
-//Ö÷º¯Êı
+//ä¸»å‡½æ•°
 
 int main()
 {
 	char choice;
-	cout << "    »¶Ó­½øÈë¶ÁÕßĞ´ÕßÄ£Äâ³ÌĞò    " << endl;
+	cout << "    æ¬¢è¿è¿›å…¥è¯»è€…å†™è€…æ¨¡æ‹Ÿç¨‹åº    " << endl;
 	while (true)
 	{
-		//´òÓ¡ÌáÊ¾ĞÅÏ¢
-		cout << "     ÇëÊäÈëÄãµÄÑ¡Ôñ     " << endl;
-		cout << "     1¡¢¶ÁÕßÓÅÏÈ" << endl;
-		cout << "     2¡¢Ğ´ÕßÓÅÏÈ" << endl;
-		cout << "     3¡¢ÍË³ö³ÌĞò" << endl;
+		//æ‰“å°æç¤ºä¿¡æ¯
+		cout << "     è¯·è¾“å…¥ä½ çš„é€‰æ‹©     " << endl;
+		cout << "     1ã€è¯»è€…ä¼˜å…ˆ" << endl;
+		cout << "     2ã€å†™è€…ä¼˜å…ˆ" << endl;
+		cout << "     3ã€é€€å‡ºç¨‹åº" << endl;
 		cout << endl;
-		//Èç¹ûÊäÈëĞÅÏ¢²»ÕıÈ·£¬¼ÌĞøÊäÈë
+		//å¦‚æœè¾“å…¥ä¿¡æ¯ä¸æ­£ç¡®ï¼Œç»§ç»­è¾“å…¥
 		do {
 			choice = (char)_getch();
 		} while (choice != '1'&&choice != '2'&&choice != '3');
 
 		system("cls");
-		//Ñ¡Ôñ1£¬¶ÁÕßÓÅÏÈ
+		//é€‰æ‹©1ï¼Œè¯»è€…ä¼˜å…ˆ
 		if (choice == '1')
 			//ReaderPriority("thread.txt");
 			ReaderPriority(const_cast<char *>("thread.txt"));
-		//Ñ¡Ôñ2£¬Ğ´ÕßÓÅÏÈ
+		//é€‰æ‹©2ï¼Œå†™è€…ä¼˜å…ˆ
 		else if (choice == '2')
 			WriterPriority(const_cast<char *>("thread.txt"));
-		//Ñ¡Ôñ3£¬ÍË³ö
+		//é€‰æ‹©3ï¼Œé€€å‡º
 		else
 			return 0;
-		//½áÊø
+		//ç»“æŸ
 		printf("\nPress Any Key to Coutinue");
 		_getch();
 		system("cls");
