@@ -14,18 +14,18 @@
 
 三．基于多线程的高并发
 
-![image]
+![image](https://github.com/SnowWhite5/OS_Cpp/blob/master/%E9%AB%98%E5%B9%B6%E5%8F%91%E6%9C%8D%E5%8A%A1%E5%99%A8/%E5%A4%9A%E7%BA%BF%E7%A8%8B1.png)
 
 主要考察C++多线程。每次建立一次连接，建立一个线程，处理完以后，关闭连接套接字，把该线程删了，以免满了。头文件是<pthread.h>，如果传参不止一个参数，把需要的参数全打包进struct,传过去再转回来，如下：
 
-![image]
+![image](https://github.com/SnowWhite5/OS_Cpp/blob/master/%E9%AB%98%E5%B9%B6%E5%8F%91%E6%9C%8D%E5%8A%A1%E5%99%A8/%E5%A4%9A%E7%BA%BF%E7%A8%8B2.png)
 
 注意！Linux下pthread不是默认的库，编译时须在末尾加上-lpthread.
 
 四．基于select的并发服务器
 原理大家都懂，就是select可监控文件集中的fd，如果有读，写申请或错误，就会返回正数（检查原理如下），但不能精确到是谁申请的，于是需要查看（listenfd）或者遍历（cnndfd)。
 
-![image]
+![image](https://github.com/SnowWhite5/OS_Cpp/blob/master/%E9%AB%98%E5%B9%B6%E5%8F%91%E6%9C%8D%E5%8A%A1%E5%99%A8/select1.png)
 
 操作:
 FD_ZERO,清空set。FD_SET，加入。FD_ISSET，判断是否该fd有申请。FD_CLR，从set中删除该fd。
@@ -45,9 +45,11 @@ Poll差不多，就不写了，区别就是不用每次都全部更新set。
 五．基于epoll的并发服务器
 由于是针对每个fd进行注册，因此可直接遍历，处理一条龙。
 
-[image]
-[image]
-[image]
+![image](https://github.com/SnowWhite5/OS_Cpp/blob/master/%E9%AB%98%E5%B9%B6%E5%8F%91%E6%9C%8D%E5%8A%A1%E5%99%A8/epoll1.png)
+
+![image](https://github.com/SnowWhite5/OS_Cpp/blob/master/%E9%AB%98%E5%B9%B6%E5%8F%91%E6%9C%8D%E5%8A%A1%E5%99%A8/epoll2.png)
+
+![image](https://github.com/SnowWhite5/OS_Cpp/blob/master/%E9%AB%98%E5%B9%B6%E5%8F%91%E6%9C%8D%E5%8A%A1%E5%99%A8/epoll3.png)
 
 步骤：
 Socket->bind->listen->epoll_create(创建一个总的描述符，所以文件加这儿）->
