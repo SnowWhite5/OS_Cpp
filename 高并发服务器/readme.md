@@ -7,7 +7,9 @@
 4.针对并发操作，每次服务器跟某一客户端连接结束，则需要关闭其连接套接字；程序结束前，关闭监听套接字。
 
 二．基于多进程的高并发
+
 ![image](https://github.com/SnowWhite5/OS_Cpp/blob/master/%E9%AB%98%E5%B9%B6%E5%8F%91%E6%9C%8D%E5%8A%A1%E5%99%A8/%E5%A4%9A%E8%BF%9B%E7%A8%8B1.png)
+
 客户端是单独的，不变。
 三．基于多线程的高并发
 [image]
