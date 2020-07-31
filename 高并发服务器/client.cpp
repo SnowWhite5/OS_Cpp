@@ -6,7 +6,7 @@
 #include<thread>
 //#pragma comment(lib,"E:\CodeBlocks\workspace\ws2_32.lib")
 using namespace std;
-
+//å‘½ä»¤
 enum CMD{
     CMD_LOGIN,
     CMD_LOGINRESULT,
@@ -15,7 +15,7 @@ enum CMD{
     CMD_NEW_USER_JOIN,
     CMD_ERROR
 };
-//ÏûÏ¢Í·
+//æ¶ˆæ¯å¤´
 struct DataHeader{
     short cmd;
     short dataLength;
@@ -73,8 +73,6 @@ struct NewUserJoin:public DataHeader
 
 int process(SOCKET _csock)
 {
-
-            //5.½ÓÊÜ¿Í»§¶ËÊı¾İ
     DataHeader header={};
     int nlen=recv(_csock,(char*)&header,sizeof(DataHeader),0);
     //DataHeader* header=(DataHeader*)szRecv;
@@ -84,74 +82,63 @@ int process(SOCKET _csock)
         return -1;
     }
     switch (header.cmd)
-        {
+    {
         case CMD_LOGINRESULT:
-            {
-                LoginResult login={};
-                recv(_csock,(char*)&login+sizeof(DataHeader),sizeof(LoginResult)-sizeof(DataHeader),0);
-                printf("ÊÕµ½·şÎñÆ÷¶ËÏûÏ¢Îª:%d\n",login.result);
-
-            }
-            break;
-        case CMD_LOGOUTRESULT:
-            {
-                LogoutResult logout={};
-                recv(_csock,(char*)&logout+sizeof(DataHeader),sizeof(LogoutResult)-sizeof(DataHeader),0);
-                printf("ÊÕµ½·şÎñÆ÷¶ËÏûÏ¢Îª:%d\n",logout.result);
-            }
-            break;
-        case CMD_NEW_USER_JOIN:
-            {
-                NewUserJoin userjoin={};
-                recv(_csock,(char*)&userjoin+sizeof(DataHeader),sizeof(NewUserJoin)-sizeof(DataHeader),0);
-                printf("ĞÂ¼ÓÈëµÄ»ï°éÊÇ<sock=%d>\n",userjoin.sock);
-            }
+        {
+            LoginResult login={};
+            recv(_csock,(char*)&login+sizeof(DataHeader),sizeof(LoginResult)-sizeof(DataHeader),0);
+            printf("æ”¶åˆ°æœåŠ¡å™¨ç«¯æ¶ˆæ¯ä¸º:%d\n",login.result);
         }
-
-
+        break;
+        case CMD_LOGOUTRESULT:
+        {
+            LogoutResult logout={};
+            recv(_csock,(char*)&logout+sizeof(DataHeader),sizeof(LogoutResult)-sizeof(DataHeader),0);
+            printf("æ”¶åˆ°æœåŠ¡å™¨ç«¯æ¶ˆæ¯ä¸º:%d\n",logout.result);
+        }
+        break;
+        case CMD_NEW_USER_JOIN:
+        {
+             NewUserJoin userjoin={};
+             recv(_csock,(char*)&userjoin+sizeof(DataHeader),sizeof(NewUserJoin)-sizeof(DataHeader),0);
+             printf("æ–°åŠ å…¥çš„ä¼™ä¼´æ˜¯<sock=%d>\n",userjoin.sock);
+        }
+   }
 }
-bool f=true;
+bool f=true;//ç»“æŸè¯¥è¿›ç¨‹ç”¨çš„
 void CMDTread(int _sock)
 {
 
     char clientBuf[256]={};
     while(true)
     {
-            scanf("%s",clientBuf);
-
-        //4.´¦ÀíÇëÇó
+        scanf("%s",clientBuf);
         if(0==strcmp(clientBuf,"exit"))
         {
             f=false;
             printf("client exit\n");
             break;
         }
-
         else if(0==strcmp(clientBuf,"login"))
-            {
-                Login login;
-                strcpy(login.userName,"aaa");
-                strcpy(login.PassWord,"123");
-                login.cmd=CMD_LOGIN;
-                login.dataLength=sizeof(login)-sizeof(DataHeader);
-                send(_sock,(char*)&login,sizeof(Login),0);
-            }
-            else if(0==strcmp(clientBuf,"logout"))
-            {
-                Logout logout;
-                strcpy(logout.userName,"aaa");
-                logout.cmd=CMD_LOGOUT;
-                logout.dataLength=sizeof(Logout)-sizeof(DataHeader);
-                send(_sock,(char*)&logout,sizeof(Logout),0);
-                //½ÓÊÜ·şÎñÆ÷·µ»ØÊı¾İ
-
-
-            }
-            else
-                printf("²»Ö§³ÖµÄÃüÁî\n");
+        {
+            Login login;
+            strcpy(login.userName,"aaa");
+            strcpy(login.PassWord,"123");
+            login.cmd=CMD_LOGIN;
+            login.dataLength=sizeof(login)-sizeof(DataHeader);
+            send(_sock,(char*)&login,sizeof(Login),0);
+         }
+         else if(0==strcmp(clientBuf,"logout"))
+         {
+            Logout logout;
+            strcpy(logout.userName,"aaa");
+            logout.cmd=CMD_LOGOUT;
+            logout.dataLength=sizeof(Logout)-sizeof(DataHeader);
+            send(_sock,(char*)&logout,sizeof(Logout),0);
+         }
+         else
+            printf("ä¸æ”¯æŒçš„å‘½ä»¤\n");
     }
-    //cout<<f<<endl;
-    //return;
 }
 int main()
 {
@@ -169,12 +156,11 @@ int main()
     if(SOCKET_ERROR==connect(_sock+1,(sockaddr*)&_sin,sizeof(sockaddr_in)))
         printf("connect failed.\n");
     char clientBuf[128]={};
+    //å¯åŠ¨çº¿ç¨‹ï¼Œè®©æ”¶å‘äº’ä¸ç­‰å¾…
     thread t1(CMDTread,_sock);
     t1.detach();
     while(f)
     {
-        //printf("hahaha\n");
-
         fd_set fdrd;
         FD_ZERO(&fdrd);
         FD_SET(_sock,&fdrd);
@@ -187,14 +173,11 @@ int main()
             FD_CLR(_sock,&fdrd);
             if(process(_sock)==-1) break;
         }
-        //t1.join();
-        //Sleep(1000);
-
     }
     closesocket(_sock);
     WSACleanup();
     printf("client exit.\n");
-    //getchar();
+    getchar();
     return 0;
 }
 
